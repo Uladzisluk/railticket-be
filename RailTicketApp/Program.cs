@@ -1,7 +1,13 @@
+using RailTicketApp.Data;
+using RailTicketApp.RabbitMQ;
+using RailTicketApp.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Services.AddScoped<ITrainService, TrainService>();
+builder.Services.AddDbContext<DbContextClass>();
+builder.Services.AddScoped<IRabbitMQProducer, RabbitMQProducer>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
