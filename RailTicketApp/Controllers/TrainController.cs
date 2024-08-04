@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RailTicketApp.Models;
 using RailTicketApp.RabbitMQ;
 using RailTicketApp.Services;
 
 namespace RailTicketApp.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TrainController : ControllerBase
