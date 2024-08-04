@@ -16,5 +16,6 @@ namespace RailTicketApp.Data
         }
 
         public DbSet<Train> Trains { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }
