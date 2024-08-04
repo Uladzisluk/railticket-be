@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<ITrainService, TrainService>();
 builder.Services.AddDbContext<DbContextClass>();
 builder.Services.AddScoped<IRabbitMQProducer, RabbitMQProducer>();
+builder.Services.AddHostedService<RabbitMQListener>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
