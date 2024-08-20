@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using RailTicketApp.Commands;
+using RailTicketApp.RabbitMq;
 
 namespace RailTicketApp.Controllers
 {
@@ -7,28 +9,28 @@ namespace RailTicketApp.Controllers
     [Route("api/[controller]")]
     public class TicketsController : ControllerBase
     {
-        private readonly CreateTicketCommandHandler _createCommandHandler;
-        private readonly DeleteTicketCommandHandler _deleteCommandHandler;
+        private readonly RabbitMqSender _rabbitMqSender;
+        private readonly RabbitMqSettings _settings;
 
-        public TicketsController(CreateTicketCommandHandler createCommandHandler, DeleteTicketCommandHandler deleteCommandHandler)
+        public TicketsController(IOptions<RabbitMqSettings> settings, RabbitMqSender rabbitMqSender)
         {
-            _createCommandHandler = createCommandHandler;
-            _deleteCommandHandler = deleteCommandHandler;
+            _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
+            _rabbitMqSender = rabbitMqSender;
         }
 
         [HttpPost]
         public IActionResult CreateTicket([FromBody] CreateTicketCommand command)
         {
-            _createCommandHandler.Handle(command);
-            return Ok();
+            _rabbitMqSender.SendMessage(command, _settings.TicketQueueName, "CreateTicketCommand");
+            return Ok(new { Message = "CreateTicketCommand has been sent to the queue" });
         }
 
         [HttpDelete("{id}")]
         public IActionResult DeleteTicket(int id)
         {
             var command = new DeleteTicketCommand { TicketId = id };
-            _deleteCommandHandler.Handle(command);
-            return Ok();
+            _rabbitMqSender.SendMessage(command, _settings.TicketQueueName, "DeleteTicketCommand");
+            return Ok(new { Message = "DeleteTicketCommand has been sent to the queue" });
         }
     }
 }

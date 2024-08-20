@@ -6,6 +6,8 @@ using RailTicketApp.Data;
 using RailTicketApp.RabbitMq;
 using RailTicketApp.Services;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,12 +44,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMqSettings"));
+
 // Add services to the container.
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<CreateTicketCommandHandler>();
 builder.Services.AddScoped <DeleteTicketCommandHandler>();
-builder.Services.AddSingleton<RabbitMqConsumer>();
-builder.Services.AddSingleton<RabbitMqSettings>();
+builder.Services.AddScoped <RabbitMqSender>();
+builder.Services.AddHostedService<RabbitMqTicketConsumer>();
 builder.Services.AddSingleton<IServiceScopeFactory>(provider =>
             provider.GetRequiredService<IServiceScopeFactory>());
 builder.Services.AddDbContext<DbContextClass>();
@@ -56,7 +60,6 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMqSettings"));
 
 var app = builder.Build();
 
