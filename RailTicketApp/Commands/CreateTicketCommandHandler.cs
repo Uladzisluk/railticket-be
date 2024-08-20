@@ -17,7 +17,7 @@ namespace RailTicketApp.Commands
             var ticket = new Ticket
             {
                 UserId = command.UserId,
-                TrainId = command.TrainId,
+                RouteId = command.RouteId,
                 PurchaseDate = command.PurchaseDate,
                 SeatNumber = command.SeatNumber,
                 Status = command.Status
