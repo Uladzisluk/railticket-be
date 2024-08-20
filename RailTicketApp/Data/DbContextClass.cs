@@ -16,5 +16,6 @@ namespace RailTicketApp.Data
             options.UseNpgsql(Configuration.GetConnectionString("WebApiDatabase"));
         }
         public DbSet<User> Users { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
     }
 }
