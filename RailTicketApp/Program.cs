@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using RailTicketApp.Data;
-using RailTicketApp.RabbitMQ;
 using RailTicketApp.Services;
 using System.Text;
 
@@ -41,11 +40,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Add services to the container.
-builder.Services.AddScoped<ITrainService, TrainService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddDbContext<DbContextClass>();
-builder.Services.AddScoped<IRabbitMQProducer, RabbitMQProducer>();
-builder.Services.AddHostedService<RabbitMQListener>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
