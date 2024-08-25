@@ -28,7 +28,7 @@ namespace RailTicketApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Train",
+                name: "Trains",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -38,7 +38,7 @@ namespace RailTicketApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Train", x => x.Id);
+                    table.PrimaryKey("PK_Trains", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -85,9 +85,9 @@ namespace RailTicketApp.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Route_Train_TrainId",
+                        name: "FK_Route_Trains_TrainId",
                         column: x => x.TrainId,
-                        principalTable: "Train",
+                        principalTable: "Trains",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -163,7 +163,7 @@ namespace RailTicketApp.Migrations
                 name: "Station");
 
             migrationBuilder.DropTable(
-                name: "Train");
+                name: "Trains");
         }
     }
 }

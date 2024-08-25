@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands;
+using RailTicketApp.Commands.Tickets;
 using RailTicketApp.RabbitMq;
 
 namespace RailTicketApp.Controllers
