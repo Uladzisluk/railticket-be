@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using RailTicketApp.Commands;
 using RailTicketApp.Data;
 using RailTicketApp.RabbitMq;
 using RailTicketApp.Services;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using RailTicketApp.Commands.Tickets;
+using RailTicketApp.Commands.Trains;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,8 +51,11 @@ builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("R
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<CreateTicketCommandHandler>();
 builder.Services.AddScoped <DeleteTicketCommandHandler>();
+builder.Services.AddScoped<CreateTrainCommandHandler>();
+builder.Services.AddScoped<DeleteTrainCommandHandler>();
 builder.Services.AddScoped <RabbitMqSender>();
 builder.Services.AddHostedService<RabbitMqTicketConsumer>();
+builder.Services.AddHostedService<RabbitMqTrainConsumer>();
 builder.Services.AddSingleton<IServiceScopeFactory>(provider =>
             provider.GetRequiredService<IServiceScopeFactory>());
 builder.Services.AddDbContext<DbContextClass>();

@@ -1,4 +1,4 @@
-﻿namespace RailTicketApp.Commands
+﻿namespace RailTicketApp.Commands.Tickets
 {
     public class CreateTicketCommand
     {

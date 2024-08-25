@@ -2,22 +2,25 @@
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqSender
     {
+        private readonly ILogger<RabbitMqSender> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IConnection _connection;
         private readonly IModel _channel;
 
-        public RabbitMqSender(IOptions<RabbitMqSettings> options)
+        public RabbitMqSender(IOptions<RabbitMqSettings> options, ILogger<RabbitMqSender> logger)
         {
             _settings = options.Value;
 
             var factory = new ConnectionFactory() { HostName = _settings.HostName };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
+            _logger = logger;
         }
 
         public void SendMessage(object message, string queueName, string commandName)
@@ -34,6 +37,7 @@ namespace RailTicketApp.RabbitMq
                                   routingKey: queueName,
                                   basicProperties: props,
                                   body: body);
+            _logger.LogInformation($"RabbitMqSender: message '{jsonMessage}' with header '{commandName}' was sent");
             Dispose();
         }
 

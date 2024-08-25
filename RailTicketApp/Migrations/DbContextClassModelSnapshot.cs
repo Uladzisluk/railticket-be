@@ -133,7 +133,7 @@ namespace RailTicketApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Train");
+                    b.ToTable("Trains");
                 });
 
             modelBuilder.Entity("RailTicketApp.Models.User", b =>

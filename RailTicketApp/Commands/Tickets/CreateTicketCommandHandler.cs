@@ -1,19 +1,23 @@
-﻿using RailTicketApp.Data;
+﻿ using RailTicketApp.Data;
 using RailTicketApp.Models;
+using RailTicketApp.RabbitMq;
 
-namespace RailTicketApp.Commands
+namespace RailTicketApp.Commands.Tickets
 {
     public class CreateTicketCommandHandler
     {
+        ILogger<CreateTicketCommandHandler> _logger;
         private readonly DbContextClass _context;
 
-        public CreateTicketCommandHandler(DbContextClass context)
+        public CreateTicketCommandHandler(DbContextClass context, ILogger<CreateTicketCommandHandler> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public void Handle(CreateTicketCommand command)
         {
+            _logger.LogInformation($"CreateTicketCommandHandler: command {command} handled");
             var ticket = new Ticket
             {
                 UserId = command.UserId,
@@ -25,6 +29,7 @@ namespace RailTicketApp.Commands
 
             _context.Tickets.Add(ticket);
             _context.SaveChanges();
+            _logger.LogInformation("CreateTicketCommandHandler: ticket was added to data base");
         }
     }
 }
