@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using RailTicketApp.Commands;
 using RailTicketApp.Commands.Trains;
 using RailTicketApp.RabbitMq;
 

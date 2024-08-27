@@ -1,7 +1,4 @@
-﻿using RailTicketApp.Commands.Tickets;
-using RailTicketApp.Data;
-using RailTicketApp.Models;
-
+﻿using RailTicketApp.Data;
 namespace RailTicketApp.Commands.Trains
 {
     public class DeleteTrainCommandHandler
