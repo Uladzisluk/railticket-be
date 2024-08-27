@@ -53,7 +53,7 @@ namespace RailTicketApp.Migrations
 
                     b.HasIndex("TrainId");
 
-                    b.ToTable("Route");
+                    b.ToTable("Routes");
                 });
 
             modelBuilder.Entity("RailTicketApp.Models.Station", b =>

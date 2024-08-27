@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging.Console;
 using RailTicketApp.Commands.Tickets;
 using RailTicketApp.Commands.Trains;
 using RailTicketApp.Commands.Stations;
+using RailTicketApp.Commands.Routes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,10 +57,13 @@ builder.Services.AddScoped<CreateTrainCommandHandler>();
 builder.Services.AddScoped<DeleteTrainCommandHandler>();
 builder.Services.AddScoped<CreateStationCommandHandler>();
 builder.Services.AddScoped<DeleteStationCommandHandler>();
+builder.Services.AddScoped<CreateRouteCommandHandler>();
+builder.Services.AddScoped<DeleteRouteCommandHandler>();
 builder.Services.AddScoped <RabbitMqSender>();
 builder.Services.AddHostedService<RabbitMqTicketConsumer>();
 builder.Services.AddHostedService<RabbitMqTrainConsumer>();
 builder.Services.AddHostedService<RabbitMqStationConsumer>();
+builder.Services.AddHostedService<RabbitMqRouteConsumer>();
 builder.Services.AddSingleton<IServiceScopeFactory>(provider =>
             provider.GetRequiredService<IServiceScopeFactory>());
 builder.Services.AddDbContext<DbContextClass>();
