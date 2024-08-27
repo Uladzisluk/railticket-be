@@ -78,7 +78,7 @@ namespace RailTicketApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Station");
+                    b.ToTable("Stations");
                 });
 
             modelBuilder.Entity("RailTicketApp.Models.Ticket", b =>

@@ -12,7 +12,7 @@ using RailTicketApp.Data;
 namespace RailTicketApp.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    [Migration("20240825111003_InitialCreate")]
+    [Migration("20240827213128_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -81,7 +81,7 @@ namespace RailTicketApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Station");
+                    b.ToTable("Stations");
                 });
 
             modelBuilder.Entity("RailTicketApp.Models.Ticket", b =>

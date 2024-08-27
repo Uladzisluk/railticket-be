@@ -13,7 +13,7 @@ namespace RailTicketApp.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Station",
+                name: "Stations",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -24,7 +24,7 @@ namespace RailTicketApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Station", x => x.Id);
+                    table.PrimaryKey("PK_Stations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -73,15 +73,15 @@ namespace RailTicketApp.Migrations
                 {
                     table.PrimaryKey("PK_Route", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Route_Station_ArrivalStationId",
+                        name: "FK_Route_Stations_ArrivalStationId",
                         column: x => x.ArrivalStationId,
-                        principalTable: "Station",
+                        principalTable: "Stations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Route_Station_DepartureStationId",
+                        name: "FK_Route_Stations_DepartureStationId",
                         column: x => x.DepartureStationId,
-                        principalTable: "Station",
+                        principalTable: "Stations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -160,7 +160,7 @@ namespace RailTicketApp.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Station");
+                name: "Stations");
 
             migrationBuilder.DropTable(
                 name: "Trains");

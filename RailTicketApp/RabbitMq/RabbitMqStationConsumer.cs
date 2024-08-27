@@ -2,20 +2,20 @@
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RailTicketApp.Commands.Trains;
+using RailTicketApp.Commands.Stations;
 using System.Text;
 
 namespace RailTicketApp.RabbitMq
 {
-    public class RabbitMqTrainConsumer: IHostedService
+    public class RabbitMqStationConsumer: IHostedService
     {
-        private readonly ILogger<RabbitMqTrainConsumer> _logger;
+        private readonly ILogger<RabbitMqStationConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
         private IConnection _connection;
         private IModel _channel;
 
-        public RabbitMqTrainConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqTrainConsumer> logger)
+        public RabbitMqStationConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqStationConsumer> logger)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _scopeFactory = scopeFactory;
@@ -29,7 +29,7 @@ namespace RailTicketApp.RabbitMq
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
-            _channel.QueueDeclare(queue: _settings.TrainQueueName,
+            _channel.QueueDeclare(queue: _settings.StationQueueName,
                                   durable: true,
                                   exclusive: false,
                                   autoDelete: false,
@@ -45,21 +45,21 @@ namespace RailTicketApp.RabbitMq
                 var message = Encoding.UTF8.GetString(body);
                 var headers = ea.BasicProperties.Headers;
                 var commandName = Encoding.UTF8.GetString((byte[])headers["command_name"]);
-                _logger.LogInformation($"RabbitMqTrainConsumer: message '{message}' with header '{commandName}' recieved");
+                _logger.LogInformation($"RabbitMqStationConsumer: message '{message}' with header '{commandName}' recieved");
 
                 using (var scope = _scopeFactory.CreateScope())
                 {
-                    var createHandler = scope.ServiceProvider.GetRequiredService<CreateTrainCommandHandler>();
-                    var deleteHandler = scope.ServiceProvider.GetRequiredService<DeleteTrainCommandHandler>();
+                    var createHandler = scope.ServiceProvider.GetRequiredService<CreateStationCommandHandler>();
+                    var deleteHandler = scope.ServiceProvider.GetRequiredService<DeleteStationCommandHandler>();
 
-                    if (commandName.Equals("CreateTrainCommand"))
+                    if (commandName.Equals("CreateStationCommand"))
                     {
-                        var command = JsonConvert.DeserializeObject<CreateTrainCommand>(message);
+                        var command = JsonConvert.DeserializeObject<CreateStationCommand>(message);
                         createHandler.Handle(command);
                     }
-                    else if (commandName.Equals("DeleteTrainCommand"))
+                    else if (commandName.Equals("DeleteStationCommand"))
                     {
-                        var command = JsonConvert.DeserializeObject<DeleteTrainCommand>(message);
+                        var command = JsonConvert.DeserializeObject<DeleteStationCommand>(message);
                         deleteHandler.Handle(command);
                     }
                 }
@@ -67,10 +67,10 @@ namespace RailTicketApp.RabbitMq
                 _channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
             };
 
-            _channel.BasicConsume(queue: _settings.TrainQueueName,
+            _channel.BasicConsume(queue: _settings.StationQueueName,
                                   autoAck: false,
                                   consumer: consumer);
-            _logger.LogInformation("RabbitMqTrainConsumer: consumer started");
+            _logger.LogInformation("RabbitMqStationConsumer: consumer started");
 
             return Task.CompletedTask;
         }
@@ -79,7 +79,7 @@ namespace RailTicketApp.RabbitMq
         {
             _channel?.Close();
             _connection?.Close();
-            _logger.LogInformation("RabbitMqTrainConsumer: consumer stopped async");
+            _logger.LogInformation("RabbitMqStationConsumer: consumer stopped async");
             return Task.CompletedTask;
         }
 
@@ -87,7 +87,7 @@ namespace RailTicketApp.RabbitMq
         {
             _channel?.Dispose();
             _connection?.Dispose();
-            _logger.LogInformation("RabbitMqTrainConsumer: consumer disposed");
+            _logger.LogInformation("RabbitMqStationConsumer: consumer stopped async");
         }
     }
 }

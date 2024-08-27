@@ -1,6 +1,5 @@
-﻿ using RailTicketApp.Data;
+﻿using RailTicketApp.Data;
 using RailTicketApp.Models;
-using RailTicketApp.RabbitMq;
 
 namespace RailTicketApp.Commands.Tickets
 {

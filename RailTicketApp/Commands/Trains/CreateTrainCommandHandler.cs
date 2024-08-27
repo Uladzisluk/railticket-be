@@ -1,5 +1,4 @@
-﻿using RailTicketApp.Commands.Tickets;
-using RailTicketApp.Data;
+﻿using RailTicketApp.Data;
 using RailTicketApp.Models;
 
 namespace RailTicketApp.Commands.Trains
