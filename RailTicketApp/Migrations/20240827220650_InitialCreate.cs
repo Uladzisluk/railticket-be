@@ -58,7 +58,7 @@ namespace RailTicketApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Route",
+                name: "Routes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -71,21 +71,21 @@ namespace RailTicketApp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Route", x => x.Id);
+                    table.PrimaryKey("PK_Routes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Route_Stations_ArrivalStationId",
+                        name: "FK_Routes_Stations_ArrivalStationId",
                         column: x => x.ArrivalStationId,
                         principalTable: "Stations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Route_Stations_DepartureStationId",
+                        name: "FK_Routes_Stations_DepartureStationId",
                         column: x => x.DepartureStationId,
                         principalTable: "Stations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Route_Trains_TrainId",
+                        name: "FK_Routes_Trains_TrainId",
                         column: x => x.TrainId,
                         principalTable: "Trains",
                         principalColumn: "Id",
@@ -108,9 +108,9 @@ namespace RailTicketApp.Migrations
                 {
                     table.PrimaryKey("PK_Tickets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tickets_Route_RouteId",
+                        name: "FK_Tickets_Routes_RouteId",
                         column: x => x.RouteId,
-                        principalTable: "Route",
+                        principalTable: "Routes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -122,18 +122,18 @@ namespace RailTicketApp.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Route_ArrivalStationId",
-                table: "Route",
+                name: "IX_Routes_ArrivalStationId",
+                table: "Routes",
                 column: "ArrivalStationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Route_DepartureStationId",
-                table: "Route",
+                name: "IX_Routes_DepartureStationId",
+                table: "Routes",
                 column: "DepartureStationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Route_TrainId",
-                table: "Route",
+                name: "IX_Routes_TrainId",
+                table: "Routes",
                 column: "TrainId");
 
             migrationBuilder.CreateIndex(
@@ -154,7 +154,7 @@ namespace RailTicketApp.Migrations
                 name: "Tickets");
 
             migrationBuilder.DropTable(
-                name: "Route");
+                name: "Routes");
 
             migrationBuilder.DropTable(
                 name: "Users");

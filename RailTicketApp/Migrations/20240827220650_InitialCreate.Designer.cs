@@ -12,7 +12,7 @@ using RailTicketApp.Data;
 namespace RailTicketApp.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    [Migration("20240827213128_InitialCreate")]
+    [Migration("20240827220650_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -56,7 +56,7 @@ namespace RailTicketApp.Migrations
 
                     b.HasIndex("TrainId");
 
-                    b.ToTable("Route");
+                    b.ToTable("Routes");
                 });
 
             modelBuilder.Entity("RailTicketApp.Models.Station", b =>
