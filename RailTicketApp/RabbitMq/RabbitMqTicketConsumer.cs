@@ -4,11 +4,13 @@ using System.Text;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands.Tickets;
+using RailTicketApp.Dto;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqTicketConsumer : IHostedService
     {
+        private readonly RabbitMqSender _rabbitMqSender;
         private readonly ILogger<RabbitMqTicketConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -43,6 +45,7 @@ namespace RailTicketApp.RabbitMq
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                var correlationId = ea.BasicProperties.CorrelationId;
                 var headers = ea.BasicProperties.Headers;
                 var commandName = Encoding.UTF8.GetString((byte[])headers["command_name"]);
                 _logger.LogInformation($"RabbitMqTicketConsumer: message '{message}' with header '{commandName}' recieved");
@@ -55,12 +58,18 @@ namespace RailTicketApp.RabbitMq
                     if (commandName.Equals("CreateTicketCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<CreateTicketCommand>(message);
-                        createHandler.Handle(command);
+                        TicketDto ticketDto = createHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok(ticketDto, 200, "Ticket created"),
+                            _settings.TicketQueueResponseName, commandName, correlationId);
                     }
                     else if (commandName.Equals("DeleteTicketCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<DeleteTicketCommand>(message);
                         deleteHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok("", 200, "Ticket deleted"),
+                            _settings.TicketQueueResponseName, commandName, correlationId);
                     }
                 }
 

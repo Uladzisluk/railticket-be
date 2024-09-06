@@ -4,11 +4,13 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RailTicketApp.Commands.Stations;
 using System.Text;
+using RailTicketApp.Dto;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqStationConsumer: IHostedService
     {
+        private readonly RabbitMqSender _rabbitMqSender;
         private readonly ILogger<RabbitMqStationConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -43,6 +45,7 @@ namespace RailTicketApp.RabbitMq
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                var correlationId = ea.BasicProperties.CorrelationId;
                 var headers = ea.BasicProperties.Headers;
                 var commandName = Encoding.UTF8.GetString((byte[])headers["command_name"]);
                 _logger.LogInformation($"RabbitMqStationConsumer: message '{message}' with header '{commandName}' recieved");
@@ -55,12 +58,18 @@ namespace RailTicketApp.RabbitMq
                     if (commandName.Equals("CreateStationCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<CreateStationCommand>(message);
-                        createHandler.Handle(command);
+                        StationDto stationDto = createHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok(stationDto, 200, "Operation successfull"),
+                            _settings.StationQueueResponseName, commandName, correlationId);
                     }
                     else if (commandName.Equals("DeleteStationCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<DeleteStationCommand>(message);
                         deleteHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok("", 200, "Station deleted"),
+                            _settings.StationQueueResponseName, commandName, correlationId);
                     }
                 }
 

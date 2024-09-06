@@ -1,5 +1,6 @@
 ﻿using RailTicketApp.Data;
 using RailTicketApp.Models;
+using RailTicketApp.Dto;
 
 namespace RailTicketApp.Commands.Stations
 {
@@ -14,7 +15,7 @@ namespace RailTicketApp.Commands.Stations
             _logger = logger;
         }
 
-        public void Handle(CreateStationCommand command)
+        public StationDto Handle(CreateStationCommand command)
         {
             _logger.LogInformation($"CreateStationCommandHandler: command {command} handled");
             var station = new Station
@@ -27,6 +28,14 @@ namespace RailTicketApp.Commands.Stations
             _context.Stations.Add(station);
             _context.SaveChanges();
             _logger.LogInformation("CreateStationCommandHandler: station was added to data base");
+
+            return new StationDto
+            {
+                Id = station.Id,
+                Name = station.Name,
+                City = station.City,
+                Country = station.Country
+            };
         }
     }
 }

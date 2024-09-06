@@ -18,18 +18,25 @@ namespace RailTicketApp.Controllers
             _rabbitMqSender = rabbitMqSender;
         }
 
-        [HttpPost]
-        public IActionResult CreateStation([FromBody] CreateStationCommand command)
+        [HttpGet]
+        public IActionResult GetStations([FromHeader(Name = "CorrelationId")] string correlationId)
         {
-            _rabbitMqSender.SendMessage(command, _settings.StationQueueName, "CreateStationCommand");
+            _rabbitMqSender.SendMessage("", _settings.StationQueueName, "GetStations", correlationId);
+            return Ok(new { Message = "GetStationsCommand has been sent to the queue" });
+        }
+
+        [HttpPost]
+        public IActionResult CreateStation([FromBody] CreateStationCommand command, [FromHeader(Name = "CorrelationId")] string correlationId)
+        {
+            _rabbitMqSender.SendMessage(command, _settings.StationQueueName, "CreateStationCommand", correlationId);
             return Ok(new { Message = "CreateStationCommand has been sent to the queue" });
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteStation(int id)
+        public IActionResult DeleteStation(int id, [FromHeader(Name = "CorrelationId")] string correlationId)
         {
             var command = new DeleteStationCommand { StationId = id };
-            _rabbitMqSender.SendMessage(command, _settings.StationQueueName, "DeleteStationCommand");
+            _rabbitMqSender.SendMessage(command, _settings.StationQueueName, "DeleteStationCommand", correlationId);
             return Ok(new { Message = "DeleteStationCommand has been sent to the queue" });
         }
     }

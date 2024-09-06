@@ -4,11 +4,13 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RailTicketApp.Commands.Trains;
 using System.Text;
+using RailTicketApp.Dto;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqTrainConsumer: IHostedService
     {
+        private readonly RabbitMqSender _rabbitMqSender;
         private readonly ILogger<RabbitMqTrainConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -43,6 +45,7 @@ namespace RailTicketApp.RabbitMq
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                var correlationId = ea.BasicProperties.CorrelationId;
                 var headers = ea.BasicProperties.Headers;
                 var commandName = Encoding.UTF8.GetString((byte[])headers["command_name"]);
                 _logger.LogInformation($"RabbitMqTrainConsumer: message '{message}' with header '{commandName}' recieved");
@@ -55,12 +58,18 @@ namespace RailTicketApp.RabbitMq
                     if (commandName.Equals("CreateTrainCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<CreateTrainCommand>(message);
-                        createHandler.Handle(command);
+                        TrainDto trainDto = createHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok(trainDto, 200, "Train created"),
+                            _settings.TrainQueueResponseName, commandName, correlationId);
                     }
                     else if (commandName.Equals("DeleteTrainCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<DeleteTrainCommand>(message);
                         deleteHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok("", 200, "Train deleted"),
+                            _settings.TicketQueueResponseName, commandName, correlationId);
                     }
                 }
 

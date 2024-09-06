@@ -4,11 +4,13 @@ using RabbitMQ.Client;
 using System.Text;
 using Newtonsoft.Json;
 using RailTicketApp.Commands.Routes;
+using RailTicketApp.Dto;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqRouteConsumer : IHostedService
     {
+        private readonly RabbitMqSender _rabbitMqSender;
         private readonly ILogger<RabbitMqRouteConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -43,6 +45,7 @@ namespace RailTicketApp.RabbitMq
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                var correlationId = ea.BasicProperties.CorrelationId;
                 var headers = ea.BasicProperties.Headers;
                 var commandName = Encoding.UTF8.GetString((byte[])headers["command_name"]);
                 _logger.LogInformation($"RabbitMqRouteConsumer: message '{message}' with header '{commandName}' recieved");
@@ -55,12 +58,18 @@ namespace RailTicketApp.RabbitMq
                     if (commandName.Equals("CreateRouteCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<CreateRouteCommand>(message);
-                        createHandler.Handle(command);
+                        RouteDto routeDto = createHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok(routeDto, 200, "Route created"),
+                            _settings.RouteQueueResponseName, commandName, correlationId);
                     }
                     else if (commandName.Equals("DeleteRouteCommand"))
                     {
                         var command = JsonConvert.DeserializeObject<DeleteRouteCommand>(message);
                         deleteHandler.Handle(command);
+
+                        _rabbitMqSender.SendMessage(ResponseFactory.Ok("", 200, "Route deleted"),
+                            _settings.RouteQueueResponseName, commandName, correlationId);
                     }
                 }
 

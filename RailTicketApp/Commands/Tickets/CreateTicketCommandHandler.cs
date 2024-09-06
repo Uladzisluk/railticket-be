@@ -1,4 +1,5 @@
 ﻿using RailTicketApp.Data;
+using RailTicketApp.Dto;
 using RailTicketApp.Models;
 
 namespace RailTicketApp.Commands.Tickets
@@ -14,7 +15,7 @@ namespace RailTicketApp.Commands.Tickets
             _logger = logger;
         }
 
-        public void Handle(CreateTicketCommand command)
+        public TicketDto Handle(CreateTicketCommand command)
         {
             _logger.LogInformation($"CreateTicketCommandHandler: command {command} handled");
             var ticket = new Ticket
@@ -29,6 +30,16 @@ namespace RailTicketApp.Commands.Tickets
             _context.Tickets.Add(ticket);
             _context.SaveChanges();
             _logger.LogInformation("CreateTicketCommandHandler: ticket was added to data base");
+
+            return new TicketDto
+            {
+                Id = ticket.Id,
+                UserId = ticket.UserId,
+                RouteId = ticket.RouteId,
+                PurchaseDate = ticket.PurchaseDate,
+                SeatNumber = ticket.SeatNumber,
+                Status = ticket.Status
+            };
         }
     }
 }
