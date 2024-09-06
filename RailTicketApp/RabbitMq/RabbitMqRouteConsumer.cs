@@ -4,25 +4,27 @@ using RabbitMQ.Client;
 using System.Text;
 using Newtonsoft.Json;
 using RailTicketApp.Commands.Routes;
-using RailTicketApp.Dto;
+using RailTicketApp.Models.Dto;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqRouteConsumer : IHostedService
     {
-        private readonly RabbitMqSender _rabbitMqSender;
+        private readonly RabbitMqSenderFactory _senderFactory;
         private readonly ILogger<RabbitMqRouteConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
         private IConnection _connection;
         private IModel _channel;
 
-        public RabbitMqRouteConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqRouteConsumer> logger)
+        public RabbitMqRouteConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqRouteConsumer> logger,
+            RabbitMqSenderFactory senderFactory)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _scopeFactory = scopeFactory;
             _logger = logger;
             InitializeRabbitMqListener();
+            _senderFactory = senderFactory;
         }
 
         private void InitializeRabbitMqListener()
@@ -40,6 +42,7 @@ namespace RailTicketApp.RabbitMq
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            var sender = _senderFactory.CreateSender();
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
@@ -54,22 +57,28 @@ namespace RailTicketApp.RabbitMq
                 {
                     var createHandler = scope.ServiceProvider.GetRequiredService<CreateRouteCommandHandler>();
                     var deleteHandler = scope.ServiceProvider.GetRequiredService<DeleteRouteCommandHandler>();
-
-                    if (commandName.Equals("CreateRouteCommand"))
+                    try
                     {
-                        var command = JsonConvert.DeserializeObject<CreateRouteCommand>(message);
-                        RouteDto routeDto = createHandler.Handle(command);
+                        if (commandName.Equals("CreateRouteCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<CreateRouteCommand>(message);
+                            RouteDto routeDto = createHandler.Handle(command);
 
-                        _rabbitMqSender.SendMessage(ResponseFactory.Ok(routeDto, 200, "Route created"),
-                            _settings.RouteQueueResponseName, commandName, correlationId);
-                    }
-                    else if (commandName.Equals("DeleteRouteCommand"))
+                            sender.SendMessage(ResponseFactory.Ok(routeDto, 200, "Route created"),
+                                _settings.RouteQueueResponseName, commandName, correlationId);
+                        }
+                        else if (commandName.Equals("DeleteRouteCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<DeleteRouteCommand>(message);
+                            deleteHandler.Handle(command);
+
+                            sender.SendMessage(ResponseFactory.Ok("", 200, "Route deleted"),
+                                _settings.RouteQueueResponseName, commandName, correlationId);
+                        }
+                    }   catch (Exception ex)
                     {
-                        var command = JsonConvert.DeserializeObject<DeleteRouteCommand>(message);
-                        deleteHandler.Handle(command);
-
-                        _rabbitMqSender.SendMessage(ResponseFactory.Ok("", 200, "Route deleted"),
-                            _settings.RouteQueueResponseName, commandName, correlationId);
+                        sender.SendMessage(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
+                                    _settings.RouteQueueResponseName, commandName, correlationId);
                     }
                 }
 

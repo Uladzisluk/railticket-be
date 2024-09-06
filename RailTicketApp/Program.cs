@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RailTicketApp.Data;
@@ -51,6 +51,10 @@ builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("R
 
 // Add services to the container.
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<TrainService>();
+builder.Services.AddScoped<TicketService>();
+builder.Services.AddScoped<StationService>();
+builder.Services.AddScoped<RouteService>();
 builder.Services.AddScoped<CreateTicketCommandHandler>();
 builder.Services.AddScoped <DeleteTicketCommandHandler>();
 builder.Services.AddScoped<CreateTrainCommandHandler>();
@@ -66,6 +70,8 @@ builder.Services.AddHostedService<RabbitMqStationConsumer>();
 builder.Services.AddHostedService<RabbitMqRouteConsumer>();
 builder.Services.AddSingleton<IServiceScopeFactory>(provider =>
             provider.GetRequiredService<IServiceScopeFactory>());
+builder.Services.AddSingleton<ILogger<RabbitMqSender>, Logger<RabbitMqSender>>();
+builder.Services.AddSingleton<RabbitMqSenderFactory>();
 builder.Services.AddDbContext<DbContextClass>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -73,7 +79,27 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") // Разрешите только ваше React-приложение
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // если используете куки или аутентификацию
+        });
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowReactApp");
 
 // Apply migrations at the startup
 using (var scope = app.Services.CreateScope())

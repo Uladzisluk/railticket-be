@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands.Trains;
+using RailTicketApp.Models;
+using RailTicketApp.Models.Dto;
 using RailTicketApp.RabbitMq;
+using RailTicketApp.Services;
 
 namespace RailTicketApp.Controllers
 {
@@ -11,11 +14,27 @@ namespace RailTicketApp.Controllers
     {
         private readonly RabbitMqSender _rabbitMqSender;
         private readonly RabbitMqSettings _settings;
+        private readonly TrainService _trainService;
 
-        public TrainsController(IOptions<RabbitMqSettings> settings, RabbitMqSender rabbitMqSender)
+        public TrainsController(IOptions<RabbitMqSettings> settings, RabbitMqSender rabbitMqSender, TrainService trainService)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _rabbitMqSender = rabbitMqSender;
+            _trainService = trainService;
+        }
+
+        [HttpGet]
+        public IActionResult GetTrains()
+        {
+            var trains = _trainService.GetTrains();
+
+            if (trains == null || !trains.Any())
+            {
+                var emptyResponse = ResponseFactory.Ok("", 200, "No trains found");
+                return Ok(emptyResponse);
+            }
+
+            return Ok(ResponseFactory.Ok(trains, 200, "Trains retrieved successfully"));
         }
 
         [HttpPost]

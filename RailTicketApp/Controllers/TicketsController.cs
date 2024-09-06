@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands.Tickets;
+using RailTicketApp.Models.Dto;
 using RailTicketApp.RabbitMq;
+using RailTicketApp.Services;
 
 namespace RailTicketApp.Controllers
 {
@@ -11,11 +13,27 @@ namespace RailTicketApp.Controllers
     {
         private readonly RabbitMqSender _rabbitMqSender;
         private readonly RabbitMqSettings _settings;
+        private readonly TicketService _ticketService;
 
-        public TicketsController(IOptions<RabbitMqSettings> settings, RabbitMqSender rabbitMqSender)
+        public TicketsController(IOptions<RabbitMqSettings> settings, RabbitMqSender rabbitMqSender, TicketService ticketService)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _rabbitMqSender = rabbitMqSender;
+            _ticketService = ticketService;
+        }
+
+        [HttpGet]
+        public IActionResult GetTickets()
+        {
+            var tickets = _ticketService.GetTickets();
+
+            if (tickets == null || !tickets.Any())
+            {
+                var emptyResponse = ResponseFactory.Ok("", 200, "No tickets found");
+                return Ok(emptyResponse);
+            }
+
+            return Ok(ResponseFactory.Ok(tickets, 200, "Tickets retrieved successfully"));
         }
 
         [HttpPost]

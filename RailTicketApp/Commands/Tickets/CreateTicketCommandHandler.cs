@@ -1,6 +1,6 @@
 ﻿using RailTicketApp.Data;
-using RailTicketApp.Dto;
 using RailTicketApp.Models;
+using RailTicketApp.Models.Dto;
 
 namespace RailTicketApp.Commands.Tickets
 {

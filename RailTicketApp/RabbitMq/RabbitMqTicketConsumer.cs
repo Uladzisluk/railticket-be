@@ -4,24 +4,26 @@ using System.Text;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands.Tickets;
-using RailTicketApp.Dto;
+using RailTicketApp.Models.Dto;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqTicketConsumer : IHostedService
     {
-        private readonly RabbitMqSender _rabbitMqSender;
+        private readonly RabbitMqSenderFactory _senderFactory;
         private readonly ILogger<RabbitMqTicketConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
         private IConnection _connection;
         private IModel _channel;
 
-        public RabbitMqTicketConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqTicketConsumer> logger)
+        public RabbitMqTicketConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqTicketConsumer> logger,
+            RabbitMqSenderFactory senderFactory)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _scopeFactory = scopeFactory;
             _logger = logger;
+            _senderFactory = senderFactory;
             InitializeRabbitMqListener();
         }
 
@@ -40,6 +42,7 @@ namespace RailTicketApp.RabbitMq
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            var sender = _senderFactory.CreateSender();
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
@@ -54,22 +57,29 @@ namespace RailTicketApp.RabbitMq
                 {
                     var createHandler = scope.ServiceProvider.GetRequiredService<CreateTicketCommandHandler>();
                     var deleteHandler = scope.ServiceProvider.GetRequiredService<DeleteTicketCommandHandler>();
-
-                    if (commandName.Equals("CreateTicketCommand"))
+                    try
                     {
-                        var command = JsonConvert.DeserializeObject<CreateTicketCommand>(message);
-                        TicketDto ticketDto = createHandler.Handle(command);
+                        if (commandName.Equals("CreateTicketCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<CreateTicketCommand>(message);
+                            TicketDto ticketDto = createHandler.Handle(command);
 
-                        _rabbitMqSender.SendMessage(ResponseFactory.Ok(ticketDto, 200, "Ticket created"),
-                            _settings.TicketQueueResponseName, commandName, correlationId);
-                    }
-                    else if (commandName.Equals("DeleteTicketCommand"))
+                            sender.SendMessage(ResponseFactory.Ok(ticketDto, 200, "Ticket created"),
+                                _settings.TicketQueueResponseName, commandName, correlationId);
+         
+                        }
+                        else if (commandName.Equals("DeleteTicketCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<DeleteTicketCommand>(message);
+                            deleteHandler.Handle(command);
+
+                            sender.SendMessage(ResponseFactory.Ok("", 200, "Ticket deleted"),
+                                _settings.TicketQueueResponseName, commandName, correlationId);
+                        }
+                    }catch(Exception ex)
                     {
-                        var command = JsonConvert.DeserializeObject<DeleteTicketCommand>(message);
-                        deleteHandler.Handle(command);
-
-                        _rabbitMqSender.SendMessage(ResponseFactory.Ok("", 200, "Ticket deleted"),
-                            _settings.TicketQueueResponseName, commandName, correlationId);
+                        sender.SendMessage(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
+                                    _settings.TicketQueueResponseName, commandName, correlationId);
                     }
                 }
 

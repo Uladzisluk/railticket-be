@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands.Stations;
+using RailTicketApp.Models.Dto;
 using RailTicketApp.RabbitMq;
+using RailTicketApp.Services;
 
 namespace RailTicketApp.Controllers
 {
@@ -9,20 +11,29 @@ namespace RailTicketApp.Controllers
     [Route("api/[controller]")]
     public class StationController : ControllerBase
     {
+        private readonly StationService _stationService;
         private readonly RabbitMqSender _rabbitMqSender;
         private readonly RabbitMqSettings _settings;
 
-        public StationController(IOptions<RabbitMqSettings> settings, RabbitMqSender rabbitMqSender)
+        public StationController(IOptions<RabbitMqSettings> settings, RabbitMqSender rabbitMqSender, StationService stationService)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _rabbitMqSender = rabbitMqSender;
+            _stationService = stationService;
         }
 
         [HttpGet]
-        public IActionResult GetStations([FromHeader(Name = "CorrelationId")] string correlationId)
+        public IActionResult GetStation()
         {
-            _rabbitMqSender.SendMessage("", _settings.StationQueueName, "GetStations", correlationId);
-            return Ok(new { Message = "GetStationsCommand has been sent to the queue" });
+            var stations = _stationService.GetStations();
+
+            if (stations == null || !stations.Any())
+            {
+                var emptyResponse = ResponseFactory.Ok("", 200, "No stations found");
+                return Ok(emptyResponse);
+            }
+
+            return Ok(ResponseFactory.Ok(stations, 200, "Stations retrieved successfully"));
         }
 
         [HttpPost]

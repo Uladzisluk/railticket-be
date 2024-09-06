@@ -1,4 +1,4 @@
-﻿namespace RailTicketApp.Dto
+﻿namespace RailTicketApp.Models.Dto
 {
     public class TrainDto
     {
