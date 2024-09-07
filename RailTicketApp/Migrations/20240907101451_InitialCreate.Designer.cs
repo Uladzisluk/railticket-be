@@ -12,7 +12,7 @@ using RailTicketApp.Data;
 namespace RailTicketApp.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    [Migration("20240827220650_InitialCreate")]
+    [Migration("20240907101451_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

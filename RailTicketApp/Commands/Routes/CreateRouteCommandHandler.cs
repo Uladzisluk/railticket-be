@@ -1,5 +1,6 @@
 ﻿using RailTicketApp.Data;
 using RailTicketApp.Models;
+using RailTicketApp.Models.Dto;
 
 namespace RailTicketApp.Commands.Routes
 {
@@ -14,7 +15,7 @@ namespace RailTicketApp.Commands.Routes
             _logger = logger;
         }
 
-        public void Handle(CreateRouteCommand command)
+        public RouteDto Handle(CreateRouteCommand command)
         {
             _logger.LogInformation($"CreatRouteCommandHandler: command {command} handled");
             var route = new Models.Route
@@ -32,6 +33,15 @@ namespace RailTicketApp.Commands.Routes
             _context.Routes.Add(route);
             _context.SaveChanges();
             _logger.LogInformation("CreateRouteCommandHandler: route was added to data base");
+            return new RouteDto
+            {
+                Id = route.Id,
+                TrainNumber = _context.Trains.Find(route.TrainId).Number,
+                DepartureStation = _context.Stations.Find(route.DepartureStationId).Name,
+                ArrivalStation = _context.Stations.Find(route.ArrivalStationId).Name,
+                DepartureTime = route.DepartureTime,
+                ArrivalTime = route.ArrivalTime
+            };
         }
     }
 }

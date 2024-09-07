@@ -4,22 +4,26 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RailTicketApp.Commands.Trains;
 using System.Text;
+using RailTicketApp.Models.Dto;
 
 namespace RailTicketApp.RabbitMq
 {
     public class RabbitMqTrainConsumer: IHostedService
     {
+        private readonly RabbitMqSenderFactory _senderFactory;
         private readonly ILogger<RabbitMqTrainConsumer> _logger;
         private readonly RabbitMqSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
         private IConnection _connection;
         private IModel _channel;
 
-        public RabbitMqTrainConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqTrainConsumer> logger)
+        public RabbitMqTrainConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqTrainConsumer> logger,
+            RabbitMqSenderFactory senderFactory)
         {
             _settings = settings.Value ?? throw new ArgumentNullException(nameof(settings));
             _scopeFactory = scopeFactory;
             _logger = logger;
+            _senderFactory = senderFactory;
             InitializeRabbitMqListener();
         }
 
@@ -38,11 +42,13 @@ namespace RailTicketApp.RabbitMq
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            var sender = _senderFactory.CreateSender();
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
+                var correlationId = ea.BasicProperties.CorrelationId;
                 var headers = ea.BasicProperties.Headers;
                 var commandName = Encoding.UTF8.GetString((byte[])headers["command_name"]);
                 _logger.LogInformation($"RabbitMqTrainConsumer: message '{message}' with header '{commandName}' recieved");
@@ -51,16 +57,28 @@ namespace RailTicketApp.RabbitMq
                 {
                     var createHandler = scope.ServiceProvider.GetRequiredService<CreateTrainCommandHandler>();
                     var deleteHandler = scope.ServiceProvider.GetRequiredService<DeleteTrainCommandHandler>();
+                    try
+                    {
+                        if (commandName.Equals("CreateTrainCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<CreateTrainCommand>(message);
+                            TrainDto trainDto = createHandler.Handle(command);
 
-                    if (commandName.Equals("CreateTrainCommand"))
+                            sender.SendMessage(ResponseFactory.Ok(trainDto, 200, "Train created"),
+                                _settings.TrainQueueResponseName, commandName, correlationId);
+                        }
+                        else if (commandName.Equals("DeleteTrainCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<DeleteTrainCommand>(message);
+                            deleteHandler.Handle(command);
+
+                            sender.SendMessage(ResponseFactory.Ok("Train was deleted", 200, "Train deleted"),
+                                _settings.TicketQueueResponseName, commandName, correlationId);
+                        }
+                    }catch(Exception ex)
                     {
-                        var command = JsonConvert.DeserializeObject<CreateTrainCommand>(message);
-                        createHandler.Handle(command);
-                    }
-                    else if (commandName.Equals("DeleteTrainCommand"))
-                    {
-                        var command = JsonConvert.DeserializeObject<DeleteTrainCommand>(message);
-                        deleteHandler.Handle(command);
+                        sender.SendMessage(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
+                                    _settings.TrainQueueResponseName, commandName, correlationId);
                     }
                 }
 

@@ -1,5 +1,6 @@
 ﻿using RailTicketApp.Data;
 using RailTicketApp.Models;
+using RailTicketApp.Models.Dto;
 
 namespace RailTicketApp.Commands.Trains
 {
@@ -14,7 +15,7 @@ namespace RailTicketApp.Commands.Trains
             _logger = logger;
         }
 
-        public void Handle(CreateTrainCommand command)
+        public TrainDto Handle(CreateTrainCommand command)
         {
             _logger.LogInformation($"CreateTrainCommandHandler: command {command} handled");
             var train = new Train
@@ -26,6 +27,13 @@ namespace RailTicketApp.Commands.Trains
             _context.Trains.Add(train);
             _context.SaveChanges();
             _logger.LogInformation("CreateTrainCommandHandler: train was added to data base");
+
+            return new TrainDto
+            {
+                Id = train.Id,
+                Name = train.Name,
+                Number = train.Number
+            };
         }
     }
 }

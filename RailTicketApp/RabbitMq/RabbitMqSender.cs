@@ -22,15 +22,16 @@ namespace RailTicketApp.RabbitMq
             _logger = logger;
         }
 
-        public void SendMessage(object message, string queueName, string commandName)
+        public void SendMessage(object message, string queueName, string commandName, string correlationId)
         {
             var jsonMessage = JsonConvert.SerializeObject(message);
             var body = Encoding.UTF8.GetBytes(jsonMessage);
             IBasicProperties props = _channel.CreateBasicProperties();
             props.Headers = new Dictionary<string, object>
             {
-                { "command_name", commandName }
+                { "command_name", commandName },
             };
+            props.CorrelationId = correlationId;
 
             _channel.BasicPublish(exchange: "",
                                   routingKey: queueName,
