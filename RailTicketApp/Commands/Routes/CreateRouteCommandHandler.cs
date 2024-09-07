@@ -36,9 +36,9 @@ namespace RailTicketApp.Commands.Routes
             return new RouteDto
             {
                 Id = route.Id,
-                TrainId = route.TrainId,
-                DepartureStationId = route.DepartureStationId,
-                ArrivalStationId=route.ArrivalStationId,
+                TrainNumber = _context.Trains.Find(route.TrainId).Number,
+                DepartureStation = _context.Stations.Find(route.DepartureStationId).Name,
+                ArrivalStation = _context.Stations.Find(route.ArrivalStationId).Name,
                 DepartureTime = route.DepartureTime,
                 ArrivalTime = route.ArrivalTime
             };

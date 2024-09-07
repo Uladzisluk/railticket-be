@@ -22,9 +22,9 @@ namespace RailTicketApp.Services
                 routeDtos.Add(new RouteDto
                 {
                     Id = rt.Id,
-                    TrainId = rt.TrainId,
-                    DepartureStationId = rt.DepartureStationId,
-                    ArrivalStationId = rt.ArrivalStationId,
+                    TrainNumber = _dbContext.Trains.Find(rt.TrainId).Number,
+                    DepartureStation = _dbContext.Stations.Find(rt.DepartureStationId).Name,
+                    ArrivalStation = _dbContext.Stations.Find(rt.ArrivalStationId).Name,
                     DepartureTime = rt.DepartureTime,
                     ArrivalTime = rt.ArrivalTime
                 });
