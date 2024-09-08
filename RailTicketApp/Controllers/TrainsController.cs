@@ -31,9 +31,11 @@ namespace RailTicketApp.Controllers
             if (trains == null || !trains.Any())
             {
                 var emptyResponse = ResponseFactory.Ok("", 200, "No trains found");
+                _rabbitMqSender.Dispose();
                 return Ok(emptyResponse);
             }
 
+            _rabbitMqSender.Dispose();
             return Ok(ResponseFactory.Ok(trains, 200, "Trains retrieved successfully"));
         }
 
@@ -41,6 +43,7 @@ namespace RailTicketApp.Controllers
         public IActionResult CreateTrain([FromBody] CreateTrainCommand command, [FromHeader(Name = "CorrelationId")] string correlationId)
         {
             _rabbitMqSender.SendMessage(command, _settings.TrainQueueName, "CreateTrainCommand", correlationId);
+            _rabbitMqSender.Dispose();
             return Ok(new { Message = "CreateTrainCommand has been sent to the queue" });
         }
 
@@ -49,6 +52,7 @@ namespace RailTicketApp.Controllers
         {
             var command = new DeleteTrainCommand { TrainId = id };
             _rabbitMqSender.SendMessage(command, _settings.TrainQueueName, "DeleteTrainCommand", correlationId);
+            _rabbitMqSender.Dispose();
             return Ok(new { Message = "DeleteTrainCommand has been sent to the queue" });
         }
     }

@@ -20,6 +20,7 @@ namespace RailTicketApp.RabbitMq
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
             _logger = logger;
+            _logger.LogInformation("RabbitMqSender: sender was created via constructor");
         }
 
         public void SendMessage(object message, string queueName, string commandName, string correlationId)
@@ -38,13 +39,14 @@ namespace RailTicketApp.RabbitMq
                                   basicProperties: props,
                                   body: body);
             _logger.LogInformation($"RabbitMqSender: message '{jsonMessage}' with header '{commandName}' was sent");
-            Dispose();
         }
 
-        private void Dispose()
+        public void Dispose()
         {
+            _logger.LogInformation("RabbitMqSender: sender disposed");
             _channel?.Dispose();
             _connection?.Dispose();
         }
+
     }
 }

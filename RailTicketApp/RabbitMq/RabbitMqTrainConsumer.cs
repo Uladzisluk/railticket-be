@@ -16,6 +16,7 @@ namespace RailTicketApp.RabbitMq
         private readonly IServiceScopeFactory _scopeFactory;
         private IConnection _connection;
         private IModel _channel;
+        private RabbitMqSender sender;
 
         public RabbitMqTrainConsumer(IOptions<RabbitMqSettings> settings, IServiceScopeFactory scopeFactory, ILogger<RabbitMqTrainConsumer> logger,
             RabbitMqSenderFactory senderFactory)
@@ -38,11 +39,17 @@ namespace RailTicketApp.RabbitMq
                                   exclusive: false,
                                   autoDelete: false,
                                   arguments: null);
+
+            _channel.QueueDeclare(queue: _settings.TrainQueueResponseName,
+                                  durable: true,
+                                  exclusive: false,
+                                  autoDelete: false,
+                                  arguments: null);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            var sender = _senderFactory.CreateSender();
+            sender = _senderFactory.CreateSender();
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
@@ -73,7 +80,7 @@ namespace RailTicketApp.RabbitMq
                             deleteHandler.Handle(command);
 
                             sender.SendMessage(ResponseFactory.Ok("Train was deleted", 200, "Train deleted"),
-                                _settings.TicketQueueResponseName, commandName, correlationId);
+                                _settings.TrainQueueResponseName, commandName, correlationId);
                         }
                     }catch(Exception ex)
                     {
@@ -98,6 +105,7 @@ namespace RailTicketApp.RabbitMq
             _channel?.Close();
             _connection?.Close();
             _logger.LogInformation("RabbitMqTrainConsumer: consumer stopped async");
+            sender.Dispose();
             return Task.CompletedTask;
         }
 
@@ -106,6 +114,7 @@ namespace RailTicketApp.RabbitMq
             _channel?.Dispose();
             _connection?.Dispose();
             _logger.LogInformation("RabbitMqTrainConsumer: consumer disposed");
+            sender.Dispose();
         }
     }
 }

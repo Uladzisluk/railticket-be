@@ -38,6 +38,12 @@ namespace RailTicketApp.RabbitMq
                                   exclusive: false,
                                   autoDelete: false,
                                   arguments: null);
+
+            _channel.QueueDeclare(queue: _settings.StationQueueResponseName,
+                                  durable: true,
+                                  exclusive: false,
+                                  autoDelete: false,
+                                  arguments: null);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
