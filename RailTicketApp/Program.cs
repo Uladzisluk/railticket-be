@@ -55,6 +55,7 @@ builder.Services.AddScoped<TrainService>();
 builder.Services.AddScoped<TicketService>();
 builder.Services.AddScoped<StationService>();
 builder.Services.AddScoped<RouteService>();
+builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<CreateTicketCommandHandler>();
 builder.Services.AddScoped <DeleteTicketCommandHandler>();
 builder.Services.AddScoped<CreateTrainCommandHandler>();

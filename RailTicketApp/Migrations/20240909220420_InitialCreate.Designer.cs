@@ -12,7 +12,7 @@ using RailTicketApp.Data;
 namespace RailTicketApp.Migrations
 {
     [DbContext(typeof(DbContextClass))]
-    [Migration("20240909192227_InitialCreate")]
+    [Migration("20240909220420_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -24,6 +24,30 @@ namespace RailTicketApp.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("RailTicketApp.Models.Booking", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("BookingDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("RouteId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SeatNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RouteId");
+
+                    b.ToTable("Bookings");
+                });
 
             modelBuilder.Entity("RailTicketApp.Models.Route", b =>
                 {
@@ -134,9 +158,36 @@ namespace RailTicketApp.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TotalSeats")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.ToTable("Trains");
+                });
+
+            modelBuilder.Entity("RailTicketApp.Models.TrainSeat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SeatNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TrainId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrainId");
+
+                    b.ToTable("TrainSeats");
                 });
 
             modelBuilder.Entity("RailTicketApp.Models.User", b =>
@@ -166,6 +217,17 @@ namespace RailTicketApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("RailTicketApp.Models.Booking", b =>
+                {
+                    b.HasOne("RailTicketApp.Models.Route", "Route")
+                        .WithMany()
+                        .HasForeignKey("RouteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Route");
                 });
 
             modelBuilder.Entity("RailTicketApp.Models.Route", b =>
@@ -212,6 +274,17 @@ namespace RailTicketApp.Migrations
                     b.Navigation("Route");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RailTicketApp.Models.TrainSeat", b =>
+                {
+                    b.HasOne("RailTicketApp.Models.Train", "train")
+                        .WithMany()
+                        .HasForeignKey("TrainId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("train");
                 });
 #pragma warning restore 612, 618
         }

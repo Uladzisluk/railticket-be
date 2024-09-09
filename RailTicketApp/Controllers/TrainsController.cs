@@ -41,6 +41,22 @@ namespace RailTicketApp.Controllers
             return Ok(ResponseFactory.Ok(trains, 200, "Trains retrieved successfully"));
         }
 
+        [HttpGet("{id}")]
+        public IActionResult GetTrain(int id)
+        {
+            try
+            {
+                var train = _trainService.GetTrainDto(id);
+                _rabbitMqSender?.Dispose();
+                return Ok(ResponseFactory.Ok(train, 200, "Train retrieved successfully"));
+            }catch(NullReferenceException ex)
+            {
+                _rabbitMqSender?.Dispose();
+                return BadRequest(ResponseFactory.Error("", 400, ex.GetType().Name, ex.Message));
+            }
+
+        }
+
         [HttpPost]
         public IActionResult CreateTrain([FromBody] CreateTrainCommand command, [FromHeader(Name = "CorrelationId")] string correlationId)
         {
