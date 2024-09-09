@@ -11,8 +11,8 @@
         public string ArrivalStationName { get; set; }
         public string ArrivalStationCity { get; set; }
         public string ArrivalStationCountry { get; set; }
-        public DateTime DepartureTime { get; set; }
-        public DateTime ArrivalTime { get; set; }
+        public TimeSpan DepartureTime { get; set; }
+        public TimeSpan ArrivalTime { get; set; }
         public DateTime PurchaseDate { get; set; }
         public string SeatNumber { get; set; }
         public string Status { get; set; }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands.Trains;
 using RailTicketApp.Models;
@@ -8,6 +9,7 @@ using RailTicketApp.Services;
 
 namespace RailTicketApp.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TrainsController : ControllerBase

@@ -66,8 +66,8 @@ namespace RailTicketApp.Migrations
                     TrainId = table.Column<int>(type: "integer", nullable: false),
                     DepartureStationId = table.Column<int>(type: "integer", nullable: false),
                     ArrivalStationId = table.Column<int>(type: "integer", nullable: false),
-                    DepartureTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ArrivalTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    DepartureTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    ArrivalTime = table.Column<TimeSpan>(type: "interval", nullable: false)
                 },
                 constraints: table =>
                 {

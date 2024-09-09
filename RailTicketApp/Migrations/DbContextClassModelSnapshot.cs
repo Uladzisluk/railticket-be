@@ -33,14 +33,14 @@ namespace RailTicketApp.Migrations
                     b.Property<int>("ArrivalStationId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("ArrivalTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("ArrivalTime")
+                        .HasColumnType("interval");
 
                     b.Property<int>("DepartureStationId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("DepartureTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeSpan>("DepartureTime")
+                        .HasColumnType("interval");
 
                     b.Property<int>("TrainId")
                         .HasColumnType("integer");
