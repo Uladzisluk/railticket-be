@@ -63,6 +63,7 @@ namespace RailTicketApp.RabbitMq
                 {
                     var createHandler = scope.ServiceProvider.GetRequiredService<CreateTicketCommandHandler>();
                     var deleteHandler = scope.ServiceProvider.GetRequiredService<DeleteTicketCommandHandler>();
+                    var buyHandler = scope.ServiceProvider.GetRequiredService<BuyTicketCommandHandler>();
                     try
                     {
                         if (commandName.Equals("CreateTicketCommand"))
@@ -80,6 +81,13 @@ namespace RailTicketApp.RabbitMq
                             deleteHandler.Handle(command);
 
                             sender.SendMessage(ResponseFactory.Ok("", 200, "Ticket deleted"),
+                                _settings.TicketQueueResponseName, commandName, correlationId);
+                        }else if (commandName.Equals("BuyTicketCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<BuyTicketCommand>(message);
+                            BookingDto bookingDto = buyHandler.Handle(command);
+
+                            sender.SendMessage(ResponseFactory.Ok(bookingDto, 200, "Ticket bought"),
                                 _settings.TicketQueueResponseName, commandName, correlationId);
                         }
                     }catch(Exception ex)

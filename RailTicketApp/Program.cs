@@ -50,7 +50,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMqSettings"));
 
 // Add services to the container.
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TrainService>();
 builder.Services.AddScoped<TicketService>();
 builder.Services.AddScoped<StationService>();
@@ -58,6 +58,7 @@ builder.Services.AddScoped<RouteService>();
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<CreateTicketCommandHandler>();
 builder.Services.AddScoped <DeleteTicketCommandHandler>();
+builder.Services.AddScoped <BuyTicketCommandHandler>();
 builder.Services.AddScoped<CreateTrainCommandHandler>();
 builder.Services.AddScoped<DeleteTrainCommandHandler>();
 builder.Services.AddScoped<CreateStationCommandHandler>();
