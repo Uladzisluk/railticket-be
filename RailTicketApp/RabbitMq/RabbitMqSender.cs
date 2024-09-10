@@ -41,6 +41,24 @@ namespace RailTicketApp.RabbitMq
             _logger.LogInformation($"RabbitMqSender: message '{jsonMessage}' with header '{commandName}' was sent");
         }
 
+        public void SendMessageToExchange(object message, string exchangeName, string commandName, string correlationId)
+        {
+            var jsonMessage = JsonConvert.SerializeObject(message);
+            var body = Encoding.UTF8.GetBytes(jsonMessage);
+            IBasicProperties props = _channel.CreateBasicProperties();
+            props.Headers = new Dictionary<string, object>
+            {
+                { "command_name", commandName },
+            };
+            props.CorrelationId = correlationId;
+
+            _channel.BasicPublish(exchange: exchangeName,
+                                  routingKey: "",
+                                  basicProperties: props,
+                                  body: body);
+            _logger.LogInformation($"RabbitMqSender: message '{jsonMessage}' with header '{commandName}' was sent");
+        }
+
         public void Dispose()
         {
             _logger.LogInformation("RabbitMqSender: sender disposed");

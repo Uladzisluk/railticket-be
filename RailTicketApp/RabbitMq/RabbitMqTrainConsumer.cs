@@ -40,11 +40,17 @@ namespace RailTicketApp.RabbitMq
                                   autoDelete: false,
                                   arguments: null);
 
+            _channel.ExchangeDeclare(exchange: "train_exchange", type: ExchangeType.Fanout, durable: true);
+
             _channel.QueueDeclare(queue: _settings.TrainQueueResponseName,
-                                  durable: true,
-                                  exclusive: false,
-                                  autoDelete: false,
-                                  arguments: null);
+                      durable: true,
+                      exclusive: false,
+                      autoDelete: false,
+                      arguments: null);
+
+            _channel.QueueBind(queue: _settings.TrainQueueResponseName,
+                               exchange: "train_exchange",
+                               routingKey: "");
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -71,21 +77,21 @@ namespace RailTicketApp.RabbitMq
                             var command = JsonConvert.DeserializeObject<CreateTrainCommand>(message);
                             TrainDto trainDto = createHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok(trainDto, 200, "Train created"),
-                                _settings.TrainQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok(trainDto, 200, "Train created"),
+                                "train_exchange", commandName, correlationId);
                         }
                         else if (commandName.Equals("DeleteTrainCommand"))
                         {
                             var command = JsonConvert.DeserializeObject<DeleteTrainCommand>(message);
                             deleteHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok("Train was deleted", 200, "Train deleted"),
-                                _settings.TrainQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok("Train was deleted", 200, "Train deleted"),
+                                "train_exchange", commandName, correlationId);
                         }
                     }catch(Exception ex)
                     {
-                        sender.SendMessage(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
-                                    _settings.TrainQueueResponseName, commandName, correlationId);
+                        sender.SendMessageToExchange(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
+                                    "train_exchange", commandName, correlationId);
                     }
                 }
 

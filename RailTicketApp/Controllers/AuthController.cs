@@ -14,10 +14,10 @@ namespace RailTicketApp.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IUserService userService;
+        private readonly UserService userService;
         private readonly IConfiguration _configuration;
 
-        public AuthController(IUserService _userService, IConfiguration configuration)
+        public AuthController(UserService _userService, IConfiguration configuration)
         {
             userService = _userService;
             _configuration = configuration;
