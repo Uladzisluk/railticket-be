@@ -34,16 +34,23 @@ namespace RailTicketApp.RabbitMq
             _channel = _connection.CreateModel();
 
             _channel.QueueDeclare(queue: _settings.TicketQueueName,
-                                  durable: true,
-                                  exclusive: false,
-                                  autoDelete: false,
-                                  arguments: null);
+                      durable: true,
+                      exclusive: false,
+                      autoDelete: false,
+                      arguments: null);
+
+            _channel.ExchangeDeclare(exchange: "ticket_exchange", type: ExchangeType.Fanout, durable: true);
 
             _channel.QueueDeclare(queue: _settings.TicketQueueResponseName,
-                                  durable: true,
-                                  exclusive: false,
-                                  autoDelete: false,
-                                  arguments: null);
+                      durable: true,
+                      exclusive: false,
+                      autoDelete: false,
+                      arguments: null);
+
+            _channel.QueueBind(queue: _settings.TicketQueueResponseName,
+                               exchange: "ticket_exchange",
+                               routingKey: "");
+
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -63,6 +70,7 @@ namespace RailTicketApp.RabbitMq
                 {
                     var createHandler = scope.ServiceProvider.GetRequiredService<CreateTicketCommandHandler>();
                     var deleteHandler = scope.ServiceProvider.GetRequiredService<DeleteTicketCommandHandler>();
+                    var buyHandler = scope.ServiceProvider.GetRequiredService<BuyTicketCommandHandler>();
                     try
                     {
                         if (commandName.Equals("CreateTicketCommand"))
@@ -70,8 +78,8 @@ namespace RailTicketApp.RabbitMq
                             var command = JsonConvert.DeserializeObject<CreateTicketCommand>(message);
                             TicketDto ticketDto = createHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok(ticketDto, 200, "Ticket created"),
-                                _settings.TicketQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok(ticketDto, 200, "Ticket created"),
+                                "ticket_exchange", commandName, correlationId);
          
                         }
                         else if (commandName.Equals("DeleteTicketCommand"))
@@ -79,13 +87,20 @@ namespace RailTicketApp.RabbitMq
                             var command = JsonConvert.DeserializeObject<DeleteTicketCommand>(message);
                             deleteHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok("", 200, "Ticket deleted"),
-                                _settings.TicketQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok("", 200, "Ticket deleted"),
+                                "ticket_exchange", commandName, correlationId);
+                        }else if (commandName.Equals("BuyTicketCommand"))
+                        {
+                            var command = JsonConvert.DeserializeObject<BuyTicketCommand>(message);
+                            BookingDto bookingDto = buyHandler.Handle(command);
+
+                            sender.SendMessageToExchange(ResponseFactory.Ok(bookingDto, 200, "Ticket bought"),
+                                "ticket_exchange", commandName, correlationId);
                         }
                     }catch(Exception ex)
                     {
-                        sender.SendMessage(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
-                                    _settings.TicketQueueResponseName, commandName, correlationId);
+                        sender.SendMessageToExchange(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
+                                    "ticket_exchange", commandName, correlationId);
                     }
                 }
 

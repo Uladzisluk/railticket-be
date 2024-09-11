@@ -19,6 +19,8 @@ namespace RailTicketApp.Data
         public DbSet<Train> Trains { get; set; }
         public DbSet<Station> Stations { get; set; }
         public DbSet<Models.Route> Routes { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+        public DbSet<TrainSeat> TrainSeats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

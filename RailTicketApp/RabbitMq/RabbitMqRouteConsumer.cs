@@ -39,11 +39,17 @@ namespace RailTicketApp.RabbitMq
                                   autoDelete: false,
                                   arguments: null);
 
+            _channel.ExchangeDeclare(exchange: "route_exchange", type: ExchangeType.Fanout, durable: true);
+
             _channel.QueueDeclare(queue: _settings.RouteQueueResponseName,
-                                  durable: true,
-                                  exclusive: false,
-                                  autoDelete: false,
-                                  arguments: null);
+                      durable: true,
+                      exclusive: false,
+                      autoDelete: false,
+                      arguments: null);
+
+            _channel.QueueBind(queue: _settings.RouteQueueResponseName,
+                               exchange: "route_exchange",
+                               routingKey: "");
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -70,21 +76,21 @@ namespace RailTicketApp.RabbitMq
                             var command = JsonConvert.DeserializeObject<CreateRouteCommand>(message);
                             RouteDto routeDto = createHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok(routeDto, 200, "Route created"),
-                                _settings.RouteQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok(routeDto, 200, "Route created"),
+                                "route_exchange", commandName, correlationId);
                         }
                         else if (commandName.Equals("DeleteRouteCommand"))
                         {
                             var command = JsonConvert.DeserializeObject<DeleteRouteCommand>(message);
                             deleteHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok("", 200, "Route deleted"),
-                                _settings.RouteQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok("", 200, "Route deleted"),
+                                "route_exchange", commandName, correlationId);
                         }
                     }   catch (Exception ex)
                     {
-                        sender.SendMessage(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
-                                    _settings.RouteQueueResponseName, commandName, correlationId);
+                        sender.SendMessageToExchange(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
+                                   "route_exchange", commandName, correlationId);
                     }
                 }
 

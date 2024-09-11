@@ -2,6 +2,7 @@
 using RailTicketApp.Data;
 using RailTicketApp.Models;
 using RailTicketApp.Models.Dto;
+using System.Diagnostics;
 
 namespace RailTicketApp.Services
 {
@@ -45,6 +46,16 @@ namespace RailTicketApp.Services
             _dbContext.SaveChanges();
 
             return true;
+        }
+
+        public User GetUser(string email)
+        {
+            var user = _dbContext.Users.Where(u => u.Email == email).FirstOrDefault();
+            if (user == null)
+            {
+                throw new NullReferenceException("There is no user with email " + email + " in db");
+            }
+            return user;
         }
 
         private bool VerifyPassword(string enteredPassword, string storedPasswordHash)

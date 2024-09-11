@@ -14,10 +14,10 @@ namespace RailTicketApp.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IUserService userService;
+        private readonly UserService userService;
         private readonly IConfiguration _configuration;
 
-        public AuthController(IUserService _userService, IConfiguration configuration)
+        public AuthController(UserService _userService, IConfiguration configuration)
         {
             userService = _userService;
             _configuration = configuration;
@@ -31,16 +31,13 @@ namespace RailTicketApp.Controllers
             {
                 return BadRequest(ModelState);
             }
-
-            var registrationResult = userService.RegisterUser(registrationDto);
-
-            if (registrationResult)
+            try
             {
-                return Ok(new { message = "Registration successful" });
-            }
-            else
+                var registrationResult = userService.RegisterUser(registrationDto);
+                return Ok(ResponseFactory.Ok("Registration successful", 200, "User was registered"));
+            } catch (Exception ex)
             {
-                return Conflict(new { message = "A user with this email already exists" });
+                return Conflict(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message));
             }
         }
 
@@ -53,7 +50,7 @@ namespace RailTicketApp.Controllers
             if (user != null)
             {
                 var token = GenerateJwtToken(user);
-                return Ok(new { token });
+                return Ok(ResponseFactory.Ok(token, 200, "Login successful"));
             }
 
             return Unauthorized();

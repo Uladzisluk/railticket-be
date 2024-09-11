@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RailTicketApp.Commands.Trains;
 using RailTicketApp.Models;
@@ -8,6 +9,7 @@ using RailTicketApp.Services;
 
 namespace RailTicketApp.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TrainsController : ControllerBase
@@ -37,6 +39,22 @@ namespace RailTicketApp.Controllers
 
             _rabbitMqSender.Dispose();
             return Ok(ResponseFactory.Ok(trains, 200, "Trains retrieved successfully"));
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetTrain(int id)
+        {
+            try
+            {
+                var train = _trainService.GetTrainDto(id);
+                _rabbitMqSender?.Dispose();
+                return Ok(ResponseFactory.Ok(train, 200, "Train retrieved successfully"));
+            }catch(NullReferenceException ex)
+            {
+                _rabbitMqSender?.Dispose();
+                return BadRequest(ResponseFactory.Error("", 400, ex.GetType().Name, ex.Message));
+            }
+
         }
 
         [HttpPost]

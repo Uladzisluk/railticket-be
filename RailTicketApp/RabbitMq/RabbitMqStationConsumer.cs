@@ -39,11 +39,17 @@ namespace RailTicketApp.RabbitMq
                                   autoDelete: false,
                                   arguments: null);
 
+            _channel.ExchangeDeclare(exchange: "station_exchange", type: ExchangeType.Fanout, durable: true);
+
             _channel.QueueDeclare(queue: _settings.StationQueueResponseName,
-                                  durable: true,
-                                  exclusive: false,
-                                  autoDelete: false,
-                                  arguments: null);
+                      durable: true,
+                      exclusive: false,
+                      autoDelete: false,
+                      arguments: null);
+
+            _channel.QueueBind(queue: _settings.StationQueueResponseName,
+                               exchange: "station_exchange",
+                               routingKey: "");
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -70,22 +76,22 @@ namespace RailTicketApp.RabbitMq
                             var command = JsonConvert.DeserializeObject<CreateStationCommand>(message);
                             StationDto stationDto = createHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok(stationDto, 200, "Operation successfull"),
-                                _settings.StationQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok(stationDto, 200, "Operation successfull"),
+                                "station_exchange", commandName, correlationId);
                         }
                         else if (commandName.Equals("DeleteStationCommand"))
                         {
                             var command = JsonConvert.DeserializeObject<DeleteStationCommand>(message);
                             deleteHandler.Handle(command);
 
-                            sender.SendMessage(ResponseFactory.Ok("", 200, "Station deleted"),
-                                _settings.StationQueueResponseName, commandName, correlationId);
+                            sender.SendMessageToExchange(ResponseFactory.Ok("", 200, "Station deleted"),
+                                "station_exchange", commandName, correlationId);
                         }
                     }
                     catch (Exception ex)
                     {
-                        sender.SendMessage(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
-                                    _settings.StationQueueResponseName, commandName, correlationId);
+                        sender.SendMessageToExchange(ResponseFactory.Error("", 500, ex.GetType().Name, ex.Message),
+                                    "station_exchange", commandName, correlationId);
                     }
                 }
 

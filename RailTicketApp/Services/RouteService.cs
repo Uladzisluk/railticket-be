@@ -31,5 +31,15 @@ namespace RailTicketApp.Services
             }
             return routeDtos;
         }
+
+        public Models.Route GetRoute(int id)
+        {
+            Models.Route route = _dbContext.Routes.Find(id);
+            if (route == null)
+            {
+                throw new NullReferenceException("There is no route with id " + id + " in db");
+            }
+            return route;
+        }
     }
 }

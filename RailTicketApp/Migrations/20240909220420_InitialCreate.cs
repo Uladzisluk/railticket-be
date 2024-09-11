@@ -34,7 +34,8 @@ namespace RailTicketApp.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Number = table.Column<string>(type: "text", nullable: false)
+                    Number = table.Column<string>(type: "text", nullable: false),
+                    TotalSeats = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -66,8 +67,8 @@ namespace RailTicketApp.Migrations
                     TrainId = table.Column<int>(type: "integer", nullable: false),
                     DepartureStationId = table.Column<int>(type: "integer", nullable: false),
                     ArrivalStationId = table.Column<int>(type: "integer", nullable: false),
-                    DepartureTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ArrivalTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    DepartureTime = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    ArrivalTime = table.Column<TimeSpan>(type: "interval", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -88,6 +89,48 @@ namespace RailTicketApp.Migrations
                         name: "FK_Routes_Trains_TrainId",
                         column: x => x.TrainId,
                         principalTable: "Trains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TrainSeats",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    TrainId = table.Column<int>(type: "integer", nullable: false),
+                    SeatNumber = table.Column<int>(type: "integer", nullable: false),
+                    IsAvailable = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TrainSeats", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TrainSeats_Trains_TrainId",
+                        column: x => x.TrainId,
+                        principalTable: "Trains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Bookings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RouteId = table.Column<int>(type: "integer", nullable: false),
+                    BookingDate = table.Column<DateOnly>(type: "date", nullable: false),
+                    SeatNumber = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Bookings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Bookings_Routes_RouteId",
+                        column: x => x.RouteId,
+                        principalTable: "Routes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -122,6 +165,11 @@ namespace RailTicketApp.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Bookings_RouteId",
+                table: "Bookings",
+                column: "RouteId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Routes_ArrivalStationId",
                 table: "Routes",
                 column: "ArrivalStationId");
@@ -145,13 +193,24 @@ namespace RailTicketApp.Migrations
                 name: "IX_Tickets_UserId",
                 table: "Tickets",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TrainSeats_TrainId",
+                table: "TrainSeats",
+                column: "TrainId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Bookings");
+
+            migrationBuilder.DropTable(
                 name: "Tickets");
+
+            migrationBuilder.DropTable(
+                name: "TrainSeats");
 
             migrationBuilder.DropTable(
                 name: "Routes");

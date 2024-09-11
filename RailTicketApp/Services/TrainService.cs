@@ -23,10 +23,27 @@ namespace RailTicketApp.Services
                 {
                     Id = tr.Id,
                     Name = tr.Name,
-                    Number = tr.Number
+                    Number = tr.Number,
+                    TotalSeats = tr.TotalSeats
                 });
             }
             return trainDtos;
+        }
+
+        public TrainDto GetTrainDto(int id)
+        {
+            Train train = _dbContext.Trains.Find(id);
+            if (train == null)
+            {
+                throw new NullReferenceException("There is no train with id " + id + " in db");
+            }
+            return new TrainDto
+            {
+                Id = train.Id,
+                Name = train.Name,
+                Number = train.Number,
+                TotalSeats = train.TotalSeats
+            };
         }
     }
 }
