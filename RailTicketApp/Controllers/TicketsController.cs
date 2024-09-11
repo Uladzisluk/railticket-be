@@ -30,7 +30,9 @@ namespace RailTicketApp.Controllers
         [HttpGet]
         public IActionResult GetTickets()
         {
-            var tickets = _ticketService.GetTickets();
+            var userEmail = User.FindFirstValue(ClaimTypes.Email);
+            var user = _userService.GetUser(userEmail);
+            var tickets = _ticketService.GetTicketDtosByUserId(user.Id);
 
             if (tickets == null || !tickets.Any())
             {
