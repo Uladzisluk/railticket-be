@@ -198,6 +198,10 @@ namespace RailTicketApp.Migrations
                 name: "IX_TrainSeats_TrainId",
                 table: "TrainSeats",
                 column: "TrainId");
+
+            migrationBuilder.Sql(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "insert_trains.sql")));
+            migrationBuilder.Sql(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "insert_stations.sql")));
+            migrationBuilder.Sql(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "insert_routes.sql")));
         }
 
         /// <inheritdoc />
